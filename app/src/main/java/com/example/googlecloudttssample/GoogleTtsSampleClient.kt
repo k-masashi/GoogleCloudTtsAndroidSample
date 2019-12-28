@@ -15,12 +15,17 @@ import java.io.IOException
 class GoogleTtsSampleClient {
 
     private var mediaPlayer: MediaPlayer? = null
-    private val apiKey = "API Keyを入力"
+    private val apiKey = "API Keyを入力します"
     private val url = "https://texttospeech.googleapis.com/v1beta1/text:synthesize"
 
-    fun start(text: String) = runBlocking {
+    private val sampleSentence = "The SSML standard is defined by the W3C."
+    private val sampleSsml = "<speak>The <say-as interpret-as=\\\"characters\\\">SSML</say-as>" +
+            "standard <break time=\\\"1s\\\"/>is defined by the " +
+            "<sub alias=\\\"World Wide Web Consortium\\\">W3C</sub>.</speak>"
+
+    fun startSample() = runBlocking {
         async(Dispatchers.Default) {
-            OkHttpClient().newCall(createRequest(text)).execute()
+            OkHttpClient().newCall(createRequest(sampleSentence)).execute()
         }.await().let { response ->
             if (response.isSuccessful) {
                 response.body()?.string().let { body ->
@@ -34,6 +39,23 @@ class GoogleTtsSampleClient {
         }
     }
 
+    fun startSsmlSample() = runBlocking {
+        async(Dispatchers.Default) {
+            OkHttpClient().newCall(createRequest(sampleSentence)).execute()
+        }.await().let { response ->
+            if (response.isSuccessful) {
+                response.body()?.string().let { body ->
+                    val audioResponse = Gson().fromJson(
+                        body,
+                        AudioResponse::class.java
+                    )
+                    playAudio(audioResponse)
+                }
+            }
+        }
+    }
+
+
     private fun createRequest(text: String) = Request.Builder()
             .url(url)
             .addHeader("X-Goog-Api-Key", apiKey)
@@ -43,7 +65,7 @@ class GoogleTtsSampleClient {
 
     private fun createRequestBody(text: String): RequestBody {
         val requestParams = RequestParams(
-            input = SynthesisInput(text = text),
+            input = SynthesisInput(ssml = text),
             voice = VoiceSelectionParams(languageCode = "en-US"),
             audioConfig = AudioConfig(audioEncoding = "LINEAR16")
         )
@@ -79,7 +101,7 @@ class GoogleTtsSampleClient {
     )
 
     data class SynthesisInput(
-        val text: String
+        val ssml: String
     )
 
     data class VoiceSelectionParams(
