@@ -56,9 +56,9 @@ class GoogleTtsSampleClient {
 
     private fun playAudio(audioResponse: AudioResponse) {
         try {
-            val url = "data:audio/mp3;base64,${audioResponse.audioContent}"
+            val dataSource = "data:audio/mp3;base64,${audioResponse.audioContent}"
             mediaPlayer = MediaPlayer().apply {
-                setDataSource(url)
+                setDataSource(dataSource)
                 prepare()
                 start()
             }
